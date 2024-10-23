@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cluster-autoscaler
+  namespace: kube-system
+  labels:
+    app: cluster-autoscaler
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: cluster-autoscaler
+  template:
+    metadata:
+      labels:
+        app: cluster-autoscaler
+    spec:
+      containers:
+      - image: k8s.gcr.io/autoscaling/cluster-autoscaler:v1.22.1
+        name: cluster-autoscaler
+        command:
+          - ./cluster-autoscaler
+          - --cloud-provider=cluster-autoscaler
+          - --nodes=1:10
+          - --scale-down-enabled=true
+          - --skip-nodes-with-local-storage=false
+          - --skip-nodes-with-system-pods=false
+        resources:
+          requests:
+            cpu: 100m
+            memory: 300Mi
+        volumeMounts:
+          - name: ssl-certs
+            mountPath: /etc/ssl/certs/ca-certificates.crt
+            readOnly: true
+      volumes:
+        - name: ssl-certs
+          hostPath:
+            path: /etc/ssl/certs/ca-certificates.crt
+
